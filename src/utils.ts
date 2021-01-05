@@ -9,7 +9,9 @@ const toNewPatient = (object: any): NewPatientEntry => {
         name: parseString(object.name, 'name'),
         ssn: parseString(object.ssn, 'ssn'),
         occupation: parseString(object.occupation, 'occupation'),
-        gender: parseGender(object.gender)
+        gender: parseGender(object.gender),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        entries: object.entries
     };
 };
 
