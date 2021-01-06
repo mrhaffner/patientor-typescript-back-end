@@ -29,4 +29,20 @@ router.get('/:id', (req, res) => {
   }
 });
 
+router.post('/:id/entries', (req, res) => {
+  try {
+    const patient = patientService.findById(req.params.id.toString());
+
+    if (patient) {
+      const addedPatient = patientService.addPatientEntry(req.body, patient);
+      res.json(addedPatient);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    res.status(400).send(e.message);
+  }
+});
+
 export default router;
