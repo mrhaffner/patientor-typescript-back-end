@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { isCaseOrDefaultClause } from 'typescript';
 import { NewPatientEntry,
     Gender,
     HealthCheckRating,
@@ -10,8 +10,7 @@ import { NewPatientEntry,
     OccupationalHealthcareEntry,
     Entry,
     Discharge,
-    SickLeave,
-    DiagnosisEntry
+    SickLeave
 } from './types';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -72,15 +71,28 @@ const isRating = (param: any): param is HealthCheckRating => {
     return Object.values(HealthCheckRating).includes(param);
 };
 
-const parseDiagnosisCodes = (codes: any): string[] => {
-    if (!codes || Array.isArray(codes) || isCode(codes)) {
+// const parseDiagnosisCodes = (codes: any): string[] => {
+//     if (!codes || Array.isArray(codes) || isCode(codes)) {
+//         throw new Error('Incorrect diagnosis codes');
+//     }
+//     return codes;
+// };
+
+// const isCode = (code: any): boolean => {
+//     return code.every(i => (typeof i === "string"));
+// };
+
+const parseDiagnosisCodes = (codes: any): Array<string> => {
+    if (!codes || !Array.isArray(codes) || !isCode(codes)) {
         throw new Error('Incorrect diagnosis codes');
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return codes;
 };
 
 const isCode = (code: any): boolean => {
-    return code.every(i => (typeof i === "string"));
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return code.every((i: any) => (typeof i === "string"));
 };
 
 const parseDischarge = (discharge: any): Discharge => {
@@ -97,8 +109,9 @@ const parseSickLeave = (leave: any): SickLeave => {
     };
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const toNewEntry = (object: any): Entry => {
-    const assertNever = (value: never): never => {
+    const assertNever = (value: any): never => {
         throw new Error(
           `Unhandled discriminated union member: ${JSON.stringify(value)}`
         );
@@ -133,39 +146,33 @@ const parseBaseEntry = (object: any): BaseEntry => {
 };
 
 const parseHospitalEntry = (object: any): HospitalEntry => {
-    const newEntry = {
-        ...parseBaseEntry(object), 
-        type: "Hospital"
+ return {
+        ...parseBaseEntry(object),
+        type: "Hospital",
+        discharge: parseDischarge(object.discharge)
     };
-    if (object.discharge) {
-        return {
-            ...newEntry,
-            discharge: parseDischarge(object.discharge)
-        };
-    }
-    return newEntry;
 };
 
 const parseOccupationalEntry = (object: any): OccupationalHealthcareEntry => {
-    const baseEntry = parseBaseEntry(object);
-    const newEntry = {
-        ...baseEntry,
-        type: "OccupationalHealthcare",
-        employerName: parseString(object.employerName, "employerName")
-    };
     if (object.sickLeave) {
         return {
-            ...newEntry,
+            ...parseBaseEntry(object),
+            type: "OccupationalHealthcare",
+            employerName: parseString(object.employerName, "employerName")
+,
             sickLeave: parseSickLeave(object.sickLeave)
         };
     }
-    return newEntry;
+    return {
+        ...parseBaseEntry(object),
+        type: "OccupationalHealthcare",
+        employerName: parseString(object.employerName, "employerName")
+    };
 };
 
 const parseHealthEntry = (object: any): HealthCheckEntry => {
-    const baseEntry = parseBaseEntry(object);
     return {
-        ...baseEntry,
+        ...parseBaseEntry(object),
         type: "HealthCheck",
         healthCheckRating: parseHealthCheckRating(object.healthCheckRating)
     };
